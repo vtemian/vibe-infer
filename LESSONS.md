@@ -37,7 +37,7 @@ No frameworks. Just: load weights -> matmul -> activation -> matmul -> softmax -
   - Handle numerical stability (subtract max before exp)
   - Implement reduction on the GPU
 
-- [ ] **6. Chain the Forward Pass**
+- [x] **6. Chain the Forward Pass**
   Wire all kernels together into a real inference pipeline.
   - Layer 1: matmul(input[784], W1[784x128]) + bias1[128] -> ReLU
   - Layer 2: matmul(hidden[128], W2[128x10]) + bias2[10] -> softmax
