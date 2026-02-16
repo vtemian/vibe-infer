@@ -24,19 +24,19 @@
 
 				`;
 
-				const bufferA = await device.createBuffer({
+				const bufferA = device.createBuffer({
 					size: 4,
 					usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST,
 					mappedAtCreation: false
 				});
 
-				const bufferB = await device.createBuffer({
+				const bufferB = device.createBuffer({
 					size: 4,
 					usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST,
 					mappedAtCreation: false
 				});
 
-				const output = await device.createBuffer({
+				const output = device.createBuffer({
 					size: 4,
 					usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
 					mappedAtCreation: false
@@ -44,6 +44,32 @@
 
 				device.queue.writeBuffer(bufferA, 0, new Float32Array([3.0]));
 			    device.queue.writeBuffer(bufferB, 0, new Float32Array([4.0]));
+
+				const shaderModule = device.createShaderModule({ code: shader });
+				const pipeline = device.createComputePipeline({
+					layout: 'auto',
+					compute: {
+						module: shaderModule,
+						entryPoint: 'main'
+					}
+				});
+				const bindGroup = device.createBindGroup({
+					layout: pipeline.getBindGroupLayout(0),
+					entries: [
+						{
+							binding: 0,
+							resource: { buffer: bufferA }
+						},
+						{
+							binding: 1,
+							resource: { buffer: bufferB }
+						},
+						{
+							binding: 2,
+							resource: { buffer: output }
+						}
+					]
+				});
 
 			}
 			init();
