@@ -51,7 +51,7 @@ No frameworks. Just: load weights -> matmul -> activation -> matmul -> softmax -
   - Feed test MNIST images through the pipeline
   - See it predict correctly
 
-- [ ] **8. Interactive Demo (bonus)**
+- [x] **8. Interactive Demo (bonus)**
   Draw a digit on a canvas, classify it in real-time.
   - Add a drawable canvas to the HTML
   - Capture canvas pixels, resize to 28x28, normalize
