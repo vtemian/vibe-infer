@@ -10,7 +10,7 @@ No frameworks. Just: load weights -> matmul -> activation -> matmul -> softmax -
   - `navigator.gpu.requestAdapter()` — handle to physical GPU
   - `adapter.requestDevice()` — logical connection to command it
 
-- [ ] **2. First Compute Shader (add two numbers)**
+- [x] **2. First Compute Shader (add two numbers)**
   Learn the full GPU compute pipeline: buffers, shaders, pipelines, dispatch, readback.
   - Create GPU buffers (input_a, input_b, output)
   - Write a WGSL compute shader that adds two numbers
