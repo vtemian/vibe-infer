@@ -31,7 +31,7 @@ No frameworks. Just: load weights -> matmul -> activation -> matmul -> softmax -
   - Write a shader that applies ReLU to every element in a buffer
   - Learn about element-wise parallelism on the GPU
 
-- [ ] **5. Softmax Kernel**
+- [x] **5. Softmax Kernel**
   Trickier — requires a reduction across elements. Teaches GPU coordination.
   - Understand softmax: `exp(x_i) / sum(exp(x_j))`
   - Handle numerical stability (subtract max before exp)
