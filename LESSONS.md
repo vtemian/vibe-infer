@@ -18,14 +18,14 @@ No frameworks. Just: load weights -> matmul -> activation -> matmul -> softmax -
   - Dispatch work to the GPU
   - Read results back to JS
 
-- [ ] **3. Matrix Multiplication Kernel**
+- [x] **3. Matrix Multiplication Kernel**
   The core operation of neural network inference. ~80% of what inference does.
   - Understand why matmul maps to GPU parallelism
   - Write a WGSL shader that multiplies two matrices
   - Learn workgroups and thread indexing (`global_invocation_id`)
   - Test with small hardcoded matrices before scaling up
 
-- [ ] **4. ReLU Activation Kernel**
+- [x] **4. ReLU Activation Kernel**
   Element-wise GPU operation. Dead simple but important.
   - Understand what ReLU does: `max(0, x)`
   - Write a shader that applies ReLU to every element in a buffer

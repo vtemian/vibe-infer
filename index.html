@@ -16,11 +16,73 @@
 				return device;
 			}
 
-			async function matmul() {
+			async function relu() {
 				const device = await init();
+				const elements = [-1.0, 2.0, -3.0, 4.0, -0.5, 0.0];
+
+				const input = device.createBuffer({
+					size: elements.length * 4,
+					usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST | GPUBufferUsage.COPY_SRC,
+					mappedAtCreation: false
+				});
+				device.queue.writeBuffer(input, 0, new Float32Array(elements));
+
+				const shader =`
+					@group(0) @binding(0) var<storage, read_write> data : array<f32>;
+					@compute @workgroup_size(1)
+					fn main(@builtin(global_invocation_id) id : vec3<u32>) {
+						data[id.x] = max(data[id.x], 0.0);
+					}
+				`
+
+				const shaderModule = device.createShaderModule({ code: shader });
+				const pipeline = device.createComputePipeline({
+					layout: 'auto',
+					compute: {
+						module: shaderModule,
+						entryPoint: 'main'
+					}
+				});
+				const bindGroup = device.createBindGroup({
+					layout: pipeline.getBindGroupLayout(0),
+					entries: [
+						{
+							binding: 0,
+							resource: {buffer: input}
+						},
+					]
+				});
+
+				const stagingBuffer = device.createBuffer({
+					size: elements.length * 4,
+					usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST,
+					mappedAtCreation: false
+				})
+
+				const encoder = device.createCommandEncoder();
+
+				const pass = encoder.beginComputePass();
+				pass.setPipeline(pipeline);
+				pass.setBindGroup(0, bindGroup);
+				pass.dispatchWorkgroups(elements.length);
+				pass.end();
+
+				encoder.copyBufferToBuffer(input, 0, stagingBuffer, 0, elements.length * 4);
+
+				device.queue.submit([encoder.finish()]);
+
+				await stagingBuffer.mapAsync(GPUMapMode.READ);
+				const output = new Float32Array(stagingBuffer.getMappedRange());
+				console.log(output);
+				stagingBuffer.unmap();
+			}
+
+			async function matmul() {
 				const M = 2;
 				const K = 3;
 				const N = 2;
+
+				const device = await init();
 
 				const matrixA = device.createBuffer({
 					size: M * K * 4,
@@ -203,7 +265,7 @@
 				console.log(result);
 				stagingBuffer.unmap();
 			}
-			matmul();
+			relu();
 		</script>
 	</body>
 </html>
