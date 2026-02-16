@@ -43,7 +43,7 @@ No frameworks. Just: load weights -> matmul -> activation -> matmul -> softmax -
   - Layer 2: matmul(hidden[128], W2[128x10]) + bias2[10] -> softmax
   - Output: 10 probabilities, argmax = predicted digit
 
-- [ ] **7. Load Real Weights & Test Images**
+- [x] **7. Load Real Weights & Test Images**
   The payoff. Load pre-trained weights, classify actual digits.
   - Export weights from a trained PyTorch model (or use pre-exported)
   - Load weight files as ArrayBuffers in JS

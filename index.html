@@ -54,30 +54,30 @@
 			async function forward() {
 				const device = await init();
 
-				const input = createBuffer(device, new Float32Array([1.0, 0.5, -1.0, 2.0]), GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST);
-				const W1 = createBuffer(device, new Float32Array([
-					0.1, 0.2, -0.1,
-                    0.3, -0.1, 0.4,
-                    -0.2, 0.1, 0.3,
-					0.5, 0.2, -0.3
-				]), GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST)
-                const bias1 = createBuffer(device, new Float32Array([0.1, -0.1, 0.2]),
+				const w1 = new Float32Array(await (await fetch('weights/w1.bin')).arrayBuffer());
+				const w2 = new Float32Array(await (await fetch('weights/w2.bin')).arrayBuffer());
+
+				const b1 = new Float32Array(await (await fetch('weights/b1.bin')).arrayBuffer());
+				const b2 = new Float32Array(await (await fetch('weights/b2.bin')).arrayBuffer());
+
+				const allImages = new Float32Array(await (await fetch('weights/test_images.bin')).arrayBuffer());
+				const testImage = allImages.slice(0, 784);
+
+				const input = createBuffer(device, testImage, GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST);
+				const W1 = createBuffer(device, new Float32Array(w1), GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST)
+                const bias1 = createBuffer(device, new Float32Array(b1),
                     GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST);
-                const W2 = createBuffer(device, new Float32Array([
-                    0.3, -0.2,
-                    0.1, 0.5,
-                    -0.4, 0.2
-                ]), GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST);
-                const bias2 = createBuffer(device, new Float32Array([0.05, -0.05]),
+                const W2 = createBuffer(device, new Float32Array(w2), GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST);
+                const bias2 = createBuffer(device, new Float32Array(b2),
                     GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST);
 
                 const hidden = device.createBuffer({
-                    size: 3 * 4,
+                    size: 128 * 4,
                     usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
                     mappedAtCreation: false
                 });
                 const output = device.createBuffer({
-                    size: 2 * 4,
+                    size: 10 * 4,
                     usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
                     mappedAtCreation: false
                 });
@@ -87,14 +87,14 @@
                     usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
                     mappedAtCreation: false
                 })
-                device.queue.writeBuffer(dims1, 0, new Uint32Array([1,3,4]));
+                device.queue.writeBuffer(dims1, 0, new Uint32Array([1,128,784]));
 
                 const dims2 = device.createBuffer({
                     size: 4 * 4, // (M, N, K) - minimum binding size for uniform buffers must be a multiple of 16.
                     usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
                     mappedAtCreation: false
                 })
-                device.queue.writeBuffer(dims2, 0, new Uint32Array([1,2,3]));
+                device.queue.writeBuffer(dims2, 0, new Uint32Array([1,10,128]));
 
                 const SOFT_MAX_SHADER =`
 					@group(0) @binding(0) var<storage, read_write> data : array<f32>;
@@ -208,19 +208,19 @@
                 const p1 = encoder.beginComputePass();
                 p1.setPipeline(matmulPipeline);
                 p1.setBindGroup(0, matmulBindGroup);
-                p1.dispatchWorkgroups(3, 1);
+                p1.dispatchWorkgroups(128, 1);
                 p1.end();
 
                 const p2 = encoder.beginComputePass();
                 p2.setPipeline(reluPipeline);
                 p2.setBindGroup(0, reluBindGroup);
-                p2.dispatchWorkgroups(3);
+                p2.dispatchWorkgroups(128);
                 p2.end();
 
                 const p3 = encoder.beginComputePass();
                 p3.setPipeline(matmulPipeline);
                 p3.setBindGroup(0, matmul2BindGroup);
-                p3.dispatchWorkgroups(2, 1);
+                p3.dispatchWorkgroups(10, 1);
                 p3.end();
 
                 const p4 = encoder.beginComputePass();
@@ -230,7 +230,7 @@
                 p4.end();
 
                 device.queue.submit([encoder.finish()]);
-                const result = await readBackBuffer(device, output, 2 * 4);
+                const result = await readBackBuffer(device, output, 10 * 4);
                 console.log("Prediction", result);
 			}
 
